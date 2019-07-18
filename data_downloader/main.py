@@ -4,14 +4,15 @@ import argparse
 from multiprocessing.dummy import Pool as ThreadPool
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from data_downloader.downloader import HttpFileDownloader
+from data_downloader.downloader import get_downloader
 
 logging.basicConfig(level=logging.INFO)
 
 
-def execute(url, path):
-    downloader = HttpFileDownloader(url, path)
-    downloader.download()
+def execute(url, path, *args, **kwargs):
+    downloader = get_downloader(url, *args, **kwargs)
+    print(downloader)
+    downloader.download(path)
 
 
 def main(args):
@@ -19,7 +20,14 @@ def main(args):
     os.makedirs(args.output, exist_ok=True)
 
     with ThreadPoolExecutor(args.threads) as executor:
-        futures = [executor.submit(execute, url[0], args.output) for url in args.url]
+
+        futures = [executor.submit(execute, url[0], args.output,
+                                   ftp_username=args.ftp_username, ftp_password=args.ftp_password) for url in args.url]
+
+        # for url in args.url:
+        #     print(url)
+        #     executor.submit(execute, url[0], args.output, ftp_username=args.ftp_username, ftp_password=args.ftp_password)
+
         for future in as_completed(futures):
             print('xxx', future)
             try:
@@ -35,6 +43,8 @@ def parse():
     )
     parser.add_argument('--url', help='Comma-separated url to download a file.',
                         action='append', nargs='+', required=True),
+    parser.add_argument('--ftp_username', help='FTP username. Ignore if no FTP protocal is requested', default='')
+    parser.add_argument('--ftp_password', help='FTP username. Ignore if no FTP protocal is requested', default='')
     parser.add_argument('--chunk_size', help='File chunk size, default to 8192.', type=int, default=8192)
     parser.add_argument('--threads', help='Number of worker threads.', type=int, default=4)
     parser.add_argument('--output', help='Output path.', required=True)
