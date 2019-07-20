@@ -1,8 +1,9 @@
+import logging
 import argparse
 import unittest as ut
 from unittest.mock import patch
 
-from data_downloader.main import main, parse
+from data_downloader.main import main, parse, get_log_level
 from data_downloader.downloader import HttpFileDownloader
 
 
@@ -20,6 +21,14 @@ class MainTest(ut.TestCase):
             self.assertEqual(actual.ftp_username, '')
             self.assertEqual(actual.ftp_password, '')
             self.assertEqual(actual.threads, 8)
+
+    def test_get_log_level(self):
+        param_list = [('info', logging.INFO), ('WarNing', logging.WARNING), ('DEBUG', logging.DEBUG),
+                      ('error', logging.ERROR), ('xxx', logging.INFO)]
+        for param, exp in param_list:
+            with self.subTest():
+                actual = get_log_level(param)
+                self.assertEqual(actual, exp)
 
     @patch('os.makedirs')
     @patch('data_downloader.downloader.get_downloader')

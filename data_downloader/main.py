@@ -5,7 +5,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from data_downloader import downloader
 
-logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger(__name__)
 
 
@@ -32,7 +31,32 @@ def main(args):
                     _logger.info("file {} deleted.".format(file_downloader.output_file))
 
 
+def get_log_level(log_level: str):
+    """returns logging level.
+
+    Parameters
+    ----------
+    log_level : str
+        string of log level
+
+    Returns
+    -------
+    logging level.
+    """
+    if log_level.upper() == 'INFO':
+        return logging.INFO
+    elif log_level.upper() == 'WARNING':
+        return logging.WARNING
+    elif log_level.upper() == 'DEBUG':
+        return logging.DEBUG
+    elif log_level.upper() == 'ERROR':
+        return logging.ERROR
+    else:
+        return logging.INFO
+
+
 def parse():
+    """parse user input arguments"""
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter
@@ -45,10 +69,12 @@ def parse():
     parser.add_argument('--threads', help='Number of worker threads.', type=int, default=4)
     parser.add_argument('--timeout', help='Timeout in seconds, defaul tto 30 seconds.', type=int, default=30)
     parser.add_argument('--output', help='Output path.', required=True)
+    parser.add_argument('--log_level', help='Log level, default=INFO', default='INFO')
 
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse()
+    logging.basicConfig(level=get_log_level(args.log_level))
     main(args)

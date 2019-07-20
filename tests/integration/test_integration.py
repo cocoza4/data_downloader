@@ -33,8 +33,8 @@ class MainTest(ut.TestCase):
 
     @patch('data_downloader.main.downloader')
     def test_main_file_not_successfully_downloaded(self, mock_downloader):
-        # this test case mocks the behavior of a partially downloaded file (might be due to network error or other other
-        # issue) by throwing an exception after successfully loading the file. The file should be removed afterwards.
+        # this test case mocks the behavior of a partially downloaded file (might be due to network error)
+        # by throwing an exception after successfully downloading the file. The file should be removed afterwards.
 
         def mock_get_downloader(url, output_dir, chunk_size, timeout, **kwargs):
             downloader = get_downloader(url, output_dir, chunk_size, timeout, **kwargs)
