@@ -1,12 +1,25 @@
 import argparse
 import unittest as ut
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-from data_downloader.main import main
+from data_downloader.main import main, parse
 from data_downloader.downloader import HttpFileDownloader
 
 
 class MainTest(ut.TestCase):
+
+    def test_parse(self):
+        command = ['python', '--url', 'http://abc.com/test.jpg', '--url', 'http://def.com/def.jpg',
+                   '--output', 'output_dir', '--chunk_size', '1234', '--timeout', '20', '--threads', '8']
+        with patch('argparse._sys.argv', command):
+            actual = parse()
+            self.assertEqual(actual.url, [['http://abc.com/test.jpg'], ['http://def.com/def.jpg']])
+            self.assertEqual(actual.chunk_size, 1234)
+            self.assertEqual(actual.output, 'output_dir')
+            self.assertEqual(actual.timeout, 20)
+            self.assertEqual(actual.ftp_username, '')
+            self.assertEqual(actual.ftp_password, '')
+            self.assertEqual(actual.threads, 8)
 
     @patch('os.makedirs')
     @patch('data_downloader.downloader.get_downloader')
