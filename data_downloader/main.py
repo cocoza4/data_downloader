@@ -52,25 +52,3 @@ def parse():
 if __name__ == "__main__":
     args = parse()
     main(args)
-
-    # import time
-    # def run(num):
-    #     return num
-    #
-    #
-    # from concurrent.futures import ThreadPoolExecutor, as_completed
-    # with ThreadPoolExecutor(4) as executor:
-    #     futures = [executor.submit(run, x) for x in range(130)]
-    #     for future in as_completed(futures):
-    #         try:
-    #             print(future.result())
-    #         except ValueError as e:
-    #             print(e)
-    # with ThreadPool(4) as pool:
-    #     # results = pool.map(run, [x for x in list(range(120))])
-    #     results = [pool.apply_async(run, [x]) for x in list(range(30))]
-    #     for async_result in results:
-    #         try:
-    #             print(async_result.get())
-    #         except ValueError as e:
-    #             print(e)
