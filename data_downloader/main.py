@@ -3,7 +3,7 @@ import logging
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from data_downloader.downloader import get_downloader
+from data_downloader import downloader
 
 logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger(__name__)
@@ -15,21 +15,21 @@ def main(args):
     with ThreadPoolExecutor(args.threads) as executor:
         futures = dict()
         for url in args.url:
-            downloader = get_downloader(url[0], args.output, args.chunk_size, args.timeout, ftp_username=args.ftp_username,
-                                        ftp_password=args.ftp_password)
-            future = executor.submit(downloader.download)
-            futures[future] = downloader
+            file_downloader = downloader.get_downloader(url[0], args.output, args.chunk_size, args.timeout,
+                                                        ftp_username=args.ftp_username, ftp_password=args.ftp_password)
+            future = executor.submit(file_downloader.download)
+            futures[future] = file_downloader
 
         for future in as_completed(futures):
             try:
                 future.result()
             except Exception as e:
                 # this is to ensure to delete partially downloaded file.
-                downloader = futures[future]
-                _logger.error("failed to download file from {}, {}.".format(downloader.url, e))
-                if downloader.file and os.path.exists(downloader.output_file):
-                    os.remove(downloader.output_file)
-                    _logger.info("file {} deleted.".format(downloader.output_file))
+                file_downloader = futures[future]
+                _logger.error("failed to download file from {}, {}.".format(file_downloader.url, e))
+                if file_downloader.file and os.path.exists(file_downloader.output_file):
+                    os.remove(file_downloader.output_file)
+                    _logger.info("file {} deleted.".format(file_downloader.output_file))
 
 
 def parse():

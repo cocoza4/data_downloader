@@ -40,7 +40,7 @@ class HttpFileDownloader(FileDownloader):
         super().__init__(url, output_dir, chunk_size, timeout)
 
     def download(self):
-        _logger.info(f"downloading file from {self.url} and saving into {self.output_file}")
+        _logger.info(f"downloading file from {self.url} and saving into {self.output_file}.")
         with requests.get(self.url, timeout=self.timeout, stream=True) as r:
             r.raise_for_status()
             with open(self.output_file, 'wb') as f:
@@ -49,7 +49,7 @@ class HttpFileDownloader(FileDownloader):
                         f.write(chunk)
                         f.flush()
 
-        _logger.info(f"successfully downloaded file {self.url}. {self.output_file} saved")
+        _logger.info(f"successfully downloaded file {self.url}. {self.output_file} saved.")
 
 
 class FtpFileDownloader(FileDownloader):
@@ -60,13 +60,13 @@ class FtpFileDownloader(FileDownloader):
         self.password = password
 
     def download(self):
-        _logger.info(f"downloading file from {self.url} and saving into {self.output_file}")
+        _logger.info(f"downloading file from {self.url} and saving into {self.output_file}.")
         with ftplib.FTP(self.host, timeout=self.timeout) as ftp:
             ftp.login(self.username, self.password)
             ftp.cwd(self.path)
             with open(self.output_file, 'wb') as f:
                 ftp.retrbinary(f'RETR {self.file}', f.write, blocksize=self.chunk_size)
-        _logger.info(f"successfully downloaded file {self.url}. {self.output_file} saved")
+        _logger.info(f"successfully downloaded file {self.url}. {self.output_file} saved.")
 
 
 def get_downloader(url, output_dir, chunk_size, timeout, **kwargs):
