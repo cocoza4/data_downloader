@@ -1,8 +1,20 @@
 import unittest as ut
+from unittest.mock import patch
 from data_downloader.downloader import get_downloader, HttpFileDownloader, FtpFileDownloader
 
 
 class DownloaderTest(ut.TestCase):
+
+    @patch('os.remove')
+    @patch('os.path.exists')
+    @patch('data_downloader.downloader._logger')
+    def test_ftp_downloader_delete(self, _logger, exists, remove):
+        exists.return_value = True
+        url = 'http://files.fast.ai/data/cifar10.tgz'
+        output_dir = 'output_dir'
+        downloader = get_downloader(url, output_dir, chunk_size=8192, timeout=60)
+        downloader.delete()
+        remove.assert_called_once_with(downloader.output_file)
 
     def test_get_downloader_http(self):
         url = 'http://files.fast.ai/data/cifar10.tgz'
@@ -46,6 +58,7 @@ class DownloaderTest(ut.TestCase):
         kwargs = {'ftp_username': 'xxx', 'ftp_password': 'yyy'}
         with self.assertRaisesRegex(ValueError, f"no protocol supported for {url}"):
             get_downloader(url, output_dir, 8192, 60, **kwargs)
+
 
 if __name__ == '__main__':
     ut.main()

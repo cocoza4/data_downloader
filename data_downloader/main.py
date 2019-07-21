@@ -26,9 +26,7 @@ def main(args):
                 # this is to ensure to delete partially downloaded file.
                 file_downloader = futures[future]
                 _logger.error("failed to download file from {}, {}.".format(file_downloader.url, e))
-                if file_downloader.file and os.path.exists(file_downloader.output_file):
-                    os.remove(file_downloader.output_file)
-                    _logger.info("file {} deleted.".format(file_downloader.output_file))
+                file_downloader.delete()
 
 
 def get_log_level(log_level: str):

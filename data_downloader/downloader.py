@@ -1,3 +1,4 @@
+import os
 import logging
 import requests
 import ftplib
@@ -34,7 +35,7 @@ class FileDownloader:
 
     path : str
         path to the file based on the url. For example, the path of
-        `ftp://ftp.ensemblgenomes.org/pub/plants/release-44/summary.txt` should be `/pub/plants/release-44`
+        `ftp://ftp.ensemblgenomes.org/pub/plants/release-44/summary.txt` is `/pub/plants/release-44`.
     """
 
     def __init__(self, url: str, output_dir: str, chunk_size: int=8192, timeout: int=30):
@@ -58,6 +59,11 @@ class FileDownloader:
 
     def download(self) -> None:
         raise NotImplementedError
+
+    def delete(self) -> None:
+        """check if `output_file` exists on local disk and `file` is not empty and delete."""
+        if self.file and os.path.exists(self.output_file):
+            os.remove(self.output_file)
 
 
 class HttpFileDownloader(FileDownloader):
@@ -92,14 +98,16 @@ class HttpFileDownloader(FileDownloader):
         super().__init__(url, output_dir, chunk_size, timeout)
 
     def download(self) -> None:
+        """download file chunk by chunk. For more  detail see `https://stackoverflow.com/a/16696317/3079777`
+        and `https://2.python-requests.org/en/master/user/advanced/#streaming-requests`"""
         _logger.info(f"downloading file from {self.url} and saving into {self.output_file}.")
+
         with requests.get(self.url, timeout=self.timeout, stream=True) as r:
             r.raise_for_status()
             with open(self.output_file, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=self.chunk_size):
                     if chunk:  # filter out keep-alive new chunks
                         f.write(chunk)
-                        f.flush()
 
         _logger.info(f"successfully downloaded file {self.url}. {self.output_file} saved.")
 
@@ -144,7 +152,10 @@ class FtpFileDownloader(FileDownloader):
         self.password = password
 
     def download(self) -> None:
+        """download file chunk by chunk see `https://docs.python.org/3/library/ftplib.html#ftplib.FTP.retrbinary`
+        for more detail."""
         _logger.info(f"downloading file from {self.url} and saving into {self.output_file}.")
+
         with ftplib.FTP(self.host, timeout=self.timeout) as ftp:
             ftp.login(self.username, self.password)
             ftp.cwd(self.path)
