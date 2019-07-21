@@ -9,6 +9,10 @@ _logger = logging.getLogger(__name__)
 
 
 def main(args):
+    """create an output directory, spawn a number of threads and start downloading. After downloading is done, check
+    if there's an error during each download (exception is treated as download failure) and delete the partially
+    downloaded files.
+    """
     os.makedirs(args.output, exist_ok=True)
 
     with ThreadPoolExecutor(args.threads) as executor:

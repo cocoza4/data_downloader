@@ -1,5 +1,5 @@
 import unittest as ut
-from unittest.mock import patch
+from unittest.mock import call, patch, mock_open, MagicMock
 from data_downloader.downloader import get_downloader, HttpFileDownloader, FtpFileDownloader
 
 
@@ -58,6 +58,55 @@ class DownloaderTest(ut.TestCase):
         kwargs = {'ftp_username': 'xxx', 'ftp_password': 'yyy'}
         with self.assertRaisesRegex(ValueError, f"no protocol supported for {url}"):
             get_downloader(url, output_dir, 8192, 60, **kwargs)
+
+    @patch('data_downloader.downloader._logger.info')
+    @patch('requests.get')
+    def test_http_file_downloader_download(self, get, info):
+
+        m = mock_open()
+        mock_request = MagicMock()
+        mock_request.iter_content.return_value = ['xxx']
+        get.return_value.__enter__.return_value = mock_request
+
+        url = 'http://files.fast.ai/data/cifar10.tgz'
+        output_dir = 'output_dir'
+        downloader = get_downloader(url, output_dir, chunk_size=8192, timeout=60)
+
+        with patch('data_downloader.downloader.open', m):
+            downloader.download()
+
+        info.assert_has_calls([call(f"downloading file from {url} and saving into {downloader.output_file}."),
+                               call(f"successfully downloaded file {url}. {downloader.output_file} saved.")])
+        m.assert_called_once_with(downloader.output_file, 'wb')
+        handle = m()
+        handle.write.assert_called_once_with('xxx')
+        get.assert_called_once_with(url, timeout=60, stream=True)
+        mock_request.raise_for_status.assert_called_once()
+        mock_request.iter_content.assert_called_once_with(chunk_size=8192)
+
+    @patch('data_downloader.downloader._logger.info')
+    @patch('ftplib.FTP')
+    def test_ftp_file_downloader_download(self, FTP, info):
+        m = mock_open()
+        mock_ftp = MagicMock()
+        FTP.return_value.__enter__.return_value = mock_ftp
+
+        url = 'ftp://files.fast.ai/data/cifar10.tgz'
+        output_dir = 'output_dir'
+        downloader = get_downloader(url, output_dir, chunk_size=8192, timeout=60, ftp_username='xxx', ftp_password='yyy')
+
+        with patch('data_downloader.downloader.open', m):
+            downloader.download()
+
+        info.assert_has_calls([call(f"downloading file from {url} and saving into {downloader.output_file}."),
+                               call(f"successfully downloaded file {url}. {downloader.output_file} saved.")])
+
+        m.assert_called_once_with(downloader.output_file, 'wb')
+        handle = m()
+        FTP.assert_called_once_with('files.fast.ai', timeout=60)
+        mock_ftp.login.assert_called_once_with('xxx', 'yyy')
+        mock_ftp.cwd.assert_called_once_with(downloader.path)
+        mock_ftp.retrbinary.assert_called_once_with(f'RETR {downloader.file}', handle.write, blocksize=8192)
 
 
 if __name__ == '__main__':

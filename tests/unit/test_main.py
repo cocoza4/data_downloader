@@ -37,13 +37,16 @@ class MainTest(ut.TestCase):
         url = 'http://files.fast.ai/data/ml-latest-small.zip'
         output_dir = 'output_dir'
 
+        mock = MagicMock()
         http_downloader = HttpFileDownloader(url, output_dir, chunk_size=8192, timeout=60)
-        http_downloader.download = lambda: None
+        http_downloader.download = mock
         get_downloader.return_value = http_downloader
         parsed = argparse.Namespace(url=[[url]], ftp_username='', ftp_password='', chunk_size=8192, threads=2,
                                     timeout=10, output=output_dir)
 
         main(parsed)
+
+        mock.assert_called_once()
 
     @patch('os.path.exists')
     @patch('data_downloader.main._logger')
